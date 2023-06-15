@@ -22,7 +22,7 @@ mongoose
   .then(() => {
     console.log("Database Connected");
     app.listen(process.env.PORT, () => {
-      console.log(`Server Is Running On http://localhost: ${process.env.PORT}`);
+      console.log(`Server Is Running On : ${process.env.PORT}`);
     });
   })
   .catch((err) => console.log(err));
