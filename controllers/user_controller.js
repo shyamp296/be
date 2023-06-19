@@ -2,28 +2,39 @@ const path = require("path");
 const User = require("../model/user_modal");
 const { createObjectCsvWriter } = require("csv-writer");
 
-exports.addUser = (req, res) => {
+exports.addUser = async (req, res) => {
   console.log(req.body);
+
   const { firstname, lastname, email, phone, gender, status, location } =
     req.body;
   const profile = req.file ? req.file.filename : "";
-  const user = new User({
-    firstname,
-    lastname,
-    email,
-    phone,
-    gender,
-    status,
-    location,
-    profile,
-  });
-  user
-    .save()
-    .then((savedUser) => {
-      console.log("data added sucessfully");
-      res.status(201).json({ data: "data added sucessfully" });
-    })
-    .catch((err) => res.status(400).json({ error: err.message }));
+
+  const users = await User.findOne({ email });
+
+  if (!users) {
+    const user = new User({
+      firstname,
+      lastname,
+      email,
+      phone,
+      gender,
+      status,
+      location,
+      profile,
+    });
+    user
+      .save()
+      .then((savedUser) => {
+        console.log("data added sucessfully");
+        res.status(201).json({ data: "data added sucessfully" });
+      })
+      .catch((err) => res.status(400).json({ error: err.message }));
+  } else {
+    console.log("user found sucessfully");
+    res.status(201).json({
+      message: "User with email already have an account",
+    });
+  }
 };
 
 exports.getOneUser = async (req, res) => {
@@ -36,19 +47,19 @@ exports.getOneUser = async (req, res) => {
 exports.editUser = (req, res) => {
   const { id } = req.params;
   const { firstname, lastname, email, phone, gender, status, location } =
-      req.body;
+    req.body;
   const profile = req.file ? req.file.filename : "";
-    
+
   User.findByIdAndUpdate(
     id,
-    { firstname, lastname, email, phone, gender, status, location ,profile},
+    { firstname, lastname, email, phone, gender, status, location, profile },
     { new: true }
   )
     .then((updatedUser) => {
       if (!updatedUser) {
         return res.status(404).json({ error: "User not found" });
       }
-        console.log("updated user",updatedUser);
+      console.log("updated user", updatedUser);
       res.json(updatedUser);
     })
     .catch((err) => res.status(400).json({ error: err.message }));
@@ -86,9 +97,7 @@ exports.getUser = async (req, res) => {
       )
     : users;
 
-
-    const paginatedUsers = filteredUsers.slice(offset, offset + limit);
-    
+  const paginatedUsers = filteredUsers.slice(offset, offset + limit);
 
   res.json({
     data: paginatedUsers,
