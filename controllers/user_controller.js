@@ -2,9 +2,8 @@ const path = require("path");
 const User = require("../model/user_modal");
 const { createObjectCsvWriter } = require("csv-writer");
 
-exports.addUser = async (req, res) => {
-  console.log(req.body);
 
+exports.addUser = async (req, res) => {
   const { firstname, lastname, email, phone, gender, status, location } =
     req.body;
   const profile = req.file ? req.file.filename : "";
@@ -25,14 +24,12 @@ exports.addUser = async (req, res) => {
     user
       .save()
       .then((savedUser) => {
-        console.log("data added sucessfully");
         res.status(201).json({ data: "data added sucessfully" });
       })
       .catch((err) => res.status(400).json({ error: err.message }));
   } else {
-    console.log("user found sucessfully");
-    res.status(201).json({
-      message: "User with email already have an account",
+    res.status(404).json({
+      message: "User with same email already have an account",
     });
   }
 };
@@ -40,12 +37,12 @@ exports.addUser = async (req, res) => {
 exports.getOneUser = async (req, res) => {
   const { id } = req.params;
   const users = await User.findById(id);
-  console.log(users);
   res.json({ data: users });
 };
 
 exports.editUser = (req, res) => {
   const { id } = req.params;
+  console.log(id);
   const { firstname, lastname, email, phone, gender, status, location } =
     req.body;
   const profile = req.file ? req.file.filename : "";
@@ -58,11 +55,14 @@ exports.editUser = (req, res) => {
     .then((updatedUser) => {
       if (!updatedUser) {
         return res.status(404).json({ error: "User not found" });
+      } else {
+        res.status(200).json({
+          message: "Data updated sucessfully",
+          data: updatedUser,
+        });
       }
-      console.log("updated user", updatedUser);
-      res.json(updatedUser);
     })
-    .catch((err) => res.status(400).json({ error: err.message }));
+    .catch((err) => res.status(404).json({ error: err.message }));
 };
 
 exports.deleteUser = async (req, res) => {
@@ -70,12 +70,12 @@ exports.deleteUser = async (req, res) => {
   if (userDelete) {
     res.status(200).json({
       success: true,
-      message: "User Delete",
+      message: "User Deleted successfully",
     });
   } else {
     res.status(401).json({
       success: false,
-      message: "User not deleted",
+      message: "Some error occured in deleting user", 
     });
   }
 };
@@ -125,11 +125,9 @@ exports.exportCsv = async (req, res) => {
   csvWriter
     .writeRecords(data)
     .then(() => {
-      console.log("CSV file created successfully");
-      res.download("export.csv"); // Download the CSV file
+      res.download("export.csv");
     })
     .catch((error) => {
-      console.error("Error creating CSV file:", error);
       res.status(500).send("Error exporting data to CSV");
     });
 };
